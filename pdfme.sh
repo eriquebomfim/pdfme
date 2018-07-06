@@ -24,6 +24,7 @@
 bufferSize=0
 lastPosition=0
 totalPages=0
+dpath=""
 sizePerFile=1 #in Mb
 
 declare -a mergins=()
@@ -51,7 +52,7 @@ gs -sDEVICE=pdfwrite \
 	-dNOPAUSE \
 	-dBATCH \
 	-dSAFER \
- 	-sOutputFile=out$i.pdf \
+ 	-sOutputFile="$dpath""out$i".pdf \
 	${mergins[$s]} > nul
 done
 
@@ -59,10 +60,13 @@ done
 
 pdfbrk(){
 
+dpath=$(dirname $1)"/"
 totalPages=$4
 fileName=$1
 do_merge=0
 do_break=0
+
+mkdir -p "$dpath""tmp"
 
 case $2 in
 	-b) do_break=1
@@ -94,7 +98,7 @@ do
 	-dSAFER \
 	-dFirstPage=$i \
 	-dLastPage=$i \
-	-sOutputFile=tmp/sample_$i.pdf $1 > nul)
+	-sOutputFile="$dpath""tmp/sample_$i.pdf" $1 > nul)
 clear
 echo "Processando $i de $totalPages."
 done
@@ -120,7 +124,7 @@ do
 	
 #read filesize
 
-fsize=$( stat -c%s "tmp/sample_$i.pdf" )
+fsize=$( stat -c%s "$dpath""tmp/sample_$i.pdf" )
 
 if [ $(( $bufferSize + $fsize )) -gt $sizePerFile ];then
 : $(( p=$i-1 ))
@@ -139,7 +143,7 @@ if [ $(( $bufferSize + $fsize )) -gt $sizePerFile ];then
 fi
 
 : $(( bufferSize+=$fsize ))	
-filesToMerge="$filesToMerge tmp/sample_$i.pdf"  
+filesToMerge="$filesToMerge $dpath""tmp/sample_$i.pdf"  
 
 if [ "$i" = "$totalPages" ]; then	
    mergins+=("$filesToMerge")
